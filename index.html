@@ -1,0 +1,1985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SWAN-ERP Final</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    /* CORE VARIABLES & THEMES */
+    :root {
+      --bg-main: #0f172a; --bg-soft: #1e293b; --border: #334155;
+      --accent: #3b82f6; --accent-soft: #60a5fa; --text: #f1f5f9;
+      --muted: #94a3b8; --danger: #ef4444; --warn: #f59e0b; --success: #22c55e;
+      --brand-font: 'Segoe UI', system-ui, sans-serif;
+    }
+    body.theme-green { --accent: #22c55e; --accent-soft: #4ade80; background: linear-gradient(180deg,#062014,#0f2b18); --brand-font: 'Segoe UI', system-ui, sans-serif; }
+    body.theme-orange { --accent: #f97316; --accent-soft: #fb923c; background: linear-gradient(180deg,#2b0f05,#3d1608); --brand-font: 'Segoe UI', system-ui, sans-serif; }
+    body.theme-red { --accent: #ef4444; --accent-soft: #f87171; background: linear-gradient(180deg,#2b0a0a,#3a0f0f); --brand-font: 'Segoe UI', system-ui, sans-serif; }
+    body.theme-paper { --accent: #1f2937; --accent-soft: #374151; --bg-main: #f8fafc; --bg-soft: #ffffff; --text: #0f172a; --muted:#64748b; --border:#e2e8f0; --brand-font: 'Georgia', 'Times New Roman'; }
+    body.theme-default { --brand-font: 'Segoe UI', system-ui, sans-serif; }
+    body.theme-slate { --bg-main:#0b1220; --bg-soft:#0f1724; --accent:#7c3aed; --accent-soft:#a78bfa; --text:#e6eef8; --muted:#9aa8bf; --border:#172033;}
+    body.theme-cool { --bg-main:#041428; --bg-soft:#07213a; --accent:#06b6d4; --accent-soft:#67e8f9; --text:#e6f7fb; --muted:#87a6b8; --border:#083048;}
+    body.theme-sun { --bg-main:#251100; --bg-soft:#3b1f00; --accent:#ffb020; --accent-soft:#ffd580; --text:#fff6ec; --muted:#b58b6a; --border:#4a2600;}
+
+    * { box-sizing: border-box; outline: none; }
+    html, body { margin: 0; padding: 0; font-family: var(--brand-font); background: var(--bg-main); color: var(--text); height: 100%; overflow: hidden; }
+    
+    /* LAYOUT */
+    .app-shell { display: flex; flex-direction: column; height: 100vh; }
+    
+    /* TOP BAR */
+    .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 0 15px; height: 56px; background: var(--bg-soft); border-bottom: 1px solid var(--border); font-size: 0.95rem; }
+    .brand { font-weight: 800; letter-spacing: 1px; color: var(--accent-soft); display:flex; align-items:center; gap:10px; }
+    .brand img { height:36px; width:36px; display:block; border-radius:6px; object-fit:cover; }
+
+    /* RIBBON NAV */
+    .ribbon { display: flex; gap: 5px; padding: 8px 10px; background: var(--bg-main); border-bottom: 1px solid var(--border); overflow-x: auto; }
+    .ribbon-btn { 
+      padding: 8px 14px; background: var(--bg-soft); border: 1px solid var(--border); 
+      color: var(--muted); border-radius: 6px; cursor: pointer; font-size: 0.75rem; 
+      display: flex; align-items: center; gap: 8px; transition: 0.2s; white-space: nowrap; font-weight: 600; text-transform: uppercase;
+    }
+    .ribbon-btn:hover { border-color: var(--accent); color: var(--text); }
+    .ribbon-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .ribbon-sep { width: 1px; background: var(--border); margin: 0 5px; }
+
+    /* MAIN VIEW AREA */
+    .main-area { flex: 1; overflow: hidden; position: relative; padding: 10px; }
+    .view { display: none; flex-direction: column; height: 100%; animation: fadein 0.2s; }
+    .view.active { display: flex; }
+    @keyframes fadein { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* COMMON UI ELEMENTS */
+    .panel { background: var(--bg-soft); border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+    .row { display: flex; gap: 10px; } .col { flex: 1; }
+    .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 5px; }
+    .field label { font-size: 0.7rem; text-transform: uppercase; color: var(--muted); letter-spacing: 0.5px; }
+    
+    input, select, textarea { 
+      background: #020617; border: 1px solid var(--border); color: var(--text); 
+      padding: 8px; border-radius: 4px; font-size: 0.9rem; width: 100%; 
+    }
+    body.theme-paper input, body.theme-paper select, body.theme-paper textarea { background:#fff; color:var(--text); }
+    input:focus, select:focus { border-color: var(--accent); }
+
+    /* TABLES */
+    .table-container { flex: 1; overflow: hidden; border: 1px solid var(--border); border-radius: 6px; background: #020617; display: flex; flex-direction: column; }
+    .table-scroll { overflow-y: auto; flex: 1; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background: var(--bg-soft); color: var(--muted); position: sticky; top: 0; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; z-index:2; }
+    tr:hover td { background: rgba(255,255,255,0.03); }
+    .text-right { text-align: right; }
+    .text-danger { color: var(--danger) !important; }
+
+    /* BUTTONS */
+    .btn { padding: 8px 16px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-soft); color: var(--text); cursor: pointer; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items:center; gap:8px; }
+    .btn:hover { border-color: var(--accent); color: var(--accent-soft); }
+    .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+    .btn-primary:hover { background: var(--accent-soft); color: white; }
+    .btn-danger { background: var(--danger); border-color: var(--danger); color: white; }
+    .btn-block { width: 100%; }
+    .btn-sm { padding: 4px 8px; font-size: 0.75rem; }
+
+    /* DASHBOARD GRID */
+    .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .tile { background: var(--bg-soft); border: 1px solid var(--border); padding: 16px; border-radius: 8px; display: flex; flex-direction: column; gap: 4px; }
+    .tile-head { font-size: 0.75rem; text-transform: uppercase; color: var(--muted); }
+    .tile-val { font-size: 1.5rem; font-weight: 700; color: var(--accent-soft); }
+    .tile-sub { font-size: 0.7rem; color: var(--muted); }
+
+    .report-bar { background: var(--bg-soft); border: 1px solid var(--border); padding: 15px; border-radius: 8px; margin-top: auto; }
+    .report-controls { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+
+    /* POS SPECIFIC */
+    .pos-layout { display: grid; grid-template-columns: 280px 1fr 320px; gap: 10px; height: 100%; }
+    .pos-totals { margin-top: auto; border-top: 1px dashed var(--border); padding-top: 10px; }
+    .pos-row { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.9rem; }
+    .grand-total { font-size: 1.6rem; font-weight: bold; color: var(--accent-soft); text-align: right; margin: 10px 0; }
+
+    /* Keep total controls sticky so they don't disappear when cart grows */
+    .pos-controls { position: sticky; bottom: 12px; background: transparent; padding-top: 10px; z-index: 3; }
+
+    /* MODAL */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; display: none; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+    .modal { background: var(--bg-main); width: 600px; max-width: 95vw; padding: 20px; border-radius: 8px; border: 1px solid var(--accent); display: flex; flex-direction: column; gap: 15px; box-shadow: 0 6px 26px rgba(0,0,0,0.6); }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem; font-weight: bold; color: var(--accent-soft); border-bottom: 1px solid var(--border); padding-bottom:8px; }
+
+    /* PRINT HIDDEN */
+    #print-zone { display: none; }
+    @media print {
+      .app-shell, .modal-overlay { display: none !important; }
+      #print-zone { display: block !important; position: absolute; top: 0; left: 0; width: 100%; background: #fff; color: #000; padding: 10px; }
+      .print-header { text-align: center; margin-bottom: 20px; }
+      .print-header img { max-height: 60px; display:block; margin: 0 auto 6px; }
+      table.print-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+      table.print-table th, table.print-table td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+    }
+
+    .hidden { display:none; }
+    .small-muted { font-size: 0.75rem; color: var(--muted); }
+  </style>
+</head>
+<body class="theme-default">
+<div class="app-shell">
+  
+  <header class="top-bar">
+    <div class="brand">
+      <!-- Logo: by default an SVG; overwritten on load if db.info.logo is set.
+           If you want the provided conversation image used as logo, place it in the repo as "logo.png"
+           or set Settings -> Logo URL to a data URL / path. -->
+      <img id="brand-logo" src="data:image/svg+xml;utf8,
+      <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
+        <polygon points='10,70 40,20 60,40 80,30 90,50 70,60 50,80 30,75' fill='%23ffffff' stroke='%23000000' stroke-width='0.5' opacity='0.9'/>
+      </svg>" alt="Swan Logo">
+      <div><span style="display:block;font-size:1.05rem">SWAN-ERP</span><small class="small-muted">Retail & Inventory</small></div>
+    </div>
+    <div style="display:flex; gap:15px; align-items:center;">
+      <span id="clock" style="color:var(--muted); font-family:monospace;">00:00:00</span>
+      <select id="theme-selector" style="width:auto; padding:4px;" onchange="setTheme(this.value)">
+        <option value="theme-default">Default</option>
+        <option value="theme-green">Forest</option>
+        <option value="theme-orange">Sunset</option>
+        <option value="theme-red">Crimson</option>
+        <option value="theme-paper">Paper</option>
+        <option value="theme-slate">Slate</option>
+        <option value="theme-cool">Cool</option>
+        <option value="theme-sun">Sunrise</option>
+      </select>
+    </div>
+  </header>
+
+  <nav class="ribbon">
+    <button class="ribbon-btn active" onclick="nav('dashboard', event)"><i class="fa fa-chart-pie"></i> Dashboard</button>
+    <div class="ribbon-sep"></div>
+    <button class="ribbon-btn" onclick="nav('pos', event)"><i class="fa fa-cash-register"></i> Sale (POS)</button>
+    <button class="ribbon-btn" onclick="nav('inventory', event)"><i class="fa fa-boxes"></i> Inventory</button>
+    <button class="ribbon-btn" onclick="nav('purchase', event)"><i class="fa fa-cart-shopping"></i> Purchase</button>
+    <div class="ribbon-sep"></div>
+    <button class="ribbon-btn" onclick="nav('ledger', event)"><i class="fa fa-book"></i> Ledger</button>
+    <button class="ribbon-btn" onclick="nav('expenses', event)"><i class="fa fa-receipt"></i> Expenses</button>
+    <button class="ribbon-btn" onclick="nav('banking', event)"><i class="fa fa-university"></i> Banking</button>
+    <button class="ribbon-btn" onclick="nav('hr', event)"><i class="fa fa-users"></i> Employees</button>
+    <div class="ribbon-sep"></div>
+    <button class="ribbon-btn" onclick="nav('settings', event)"><i class="fa fa-cogs"></i> Settings</button>
+  </nav>
+
+  <main class="main-area">
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="view active">
+      <div class="dash-grid">
+        <div class="tile">
+          <span class="tile-head">Total Sales (Today)</span>
+          <span class="tile-val" id="d-total">0.00</span>
+          <span class="tile-sub">Cash + Credit + Online</span>
+        </div>
+        <div class="tile">
+          <span class="tile-head">Cash Sales</span>
+          <span class="tile-val" id="d-cash">0.00</span>
+        </div>
+        <div class="tile">
+          <span class="tile-head">Credit Sales / Outstanding</span>
+          <span class="tile-val" id="d-credit" style="color:var(--warn)">0.00</span>
+        </div>
+        <div class="tile">
+          <span class="tile-head">Online / Bank Sales</span>
+          <span class="tile-val" id="d-online">0.00</span>
+        </div>
+        <div class="tile">
+          <span class="tile-head">Gross Profit</span>
+          <span class="tile-val" id="d-gross" style="color:var(--success)">0.00</span>
+        </div>
+        <div class="tile" style="border-color:var(--danger)">
+          <span class="tile-head">Net Profit</span>
+          <span class="tile-val text-danger" id="d-net">0.00</span>
+        </div>
+      </div>
+
+      <div class="panel" style="flex:1; display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <div class="field">
+            <label>Quick Date</label>
+            <select id="dash-range" onchange="calcDash()">
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="7">Last 7 days</option>
+              <option value="30">Last 30 days</option>
+              <option value="all">All Time</option>
+              <option value="custom">Custom Range</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>From</label>
+            <input type="date" id="dash-from" onchange="calcDash()">
+          </div>
+          <div class="field">
+            <label>To</label>
+            <input type="date" id="dash-to" onchange="calcDash()">
+          </div>
+        </div>
+
+        <div class="table-container" style="height:260px">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Invoice</th>
+                  <th>Customer</th>
+                  <th>Mode</th>
+                  <th class="text-right">Amount</th>
+                  <th class="text-right">Gross</th>
+                  <th class="text-right">Net</th>
+                </tr>
+              </thead>
+              <tbody id="dash-sales-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="report-bar">
+          <h3 style="color:var(--muted); margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:5px;">REPORTS & ACTIONS</h3>
+          <div class="report-controls">
+            <div class="field"><label>From</label><input type="date" id="rpt-start" style="width:140px"></div>
+            <div class="field"><label>To</label><input type="date" id="rpt-end" style="width:140px"></div>
+
+            <div class="field">
+              <label>Sale</label>
+              <div class="row">
+                <button class="btn btn-sm" onclick="viewReport('sale')"><i class="fa fa-eye"></i> View</button>
+                <button class="btn btn-sm" onclick="printReport('sale')"><i class="fa fa-print"></i> Print</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>Profit</label>
+              <div class="row">
+                <button class="btn btn-sm" onclick="viewReport('profit')"><i class="fa fa-eye"></i> View</button>
+                <button class="btn btn-sm" onclick="printReport('profit')"><i class="fa fa-print"></i> Print</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>Expense</label>
+              <div class="row">
+                <button class="btn btn-sm" onclick="viewReport('expense')"><i class="fa fa-eye"></i> View</button>
+                <button class="btn btn-sm" onclick="printReport('expense')"><i class="fa fa-print"></i> Print</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>Stock</label>
+              <div class="row">
+                <button class="btn btn-sm" onclick="viewReport('stock')"><i class="fa fa-eye"></i> View</button>
+                <button class="btn btn-sm" onclick="printReport('stock')"><i class="fa fa-print"></i> Print</button>
+              </div>
+            </div>
+
+            <div style="flex:1"></div>
+
+            <!-- BILL BROWSER -->
+            <div class="field">
+              <label>Browse Bills (by Invoice#)</label>
+              <div class="row">
+                <button class="btn btn-sm" onclick="billPrev()"><i class="fa fa-chevron-left"></i></button>
+                <input id="bill-index" style="width:120px;text-align:center" readonly />
+                <button class="btn btn-sm" onclick="billNext()"><i class="fa fa-chevron-right"></i></button>
+              </div>
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <div class="row">
+                <button class="btn btn-sm" onclick="billPrintCurrent()"><i class="fa fa-print"></i> Reprint</button>
+                <button class="btn btn-sm" onclick="billEditCurrent()"><i class="fa fa-pen"></i> Edit</button>
+                <button class="btn btn-sm btn-danger" onclick="billReturnCurrent()"><i class="fa fa-undo"></i> Return</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Note: Items quick view removed from dashboard per request -->
+      </div>
+    </div>
+
+    <!-- POS -->
+    <div id="pos" class="view">
+      <div class="pos-layout">
+        <!-- left -->
+        <div class="panel">
+          <div class="field">
+            <label>Customer</label>
+            <div class="row">
+              <select id="pos-cust"></select>
+              <button class="btn btn-primary" onclick="modal('m-cust')">+</button>
+            </div>
+          </div>
+          <div class="field"><label>Payment Mode</label>
+            <select id="pos-mode" onchange="toggleBank('pos-mode','pos-bank-row')">
+              <option value="Cash">Cash</option>
+              <option value="Credit">Credit</option>
+              <option value="Online">Online/Bank</option>
+            </select>
+          </div>
+          <div class="field hidden" id="pos-bank-row" style="display:none">
+            <label>Select Bank</label><select id="pos-bank"></select>
+          </div>
+          <div class="field"><label>Remarks</label><textarea id="pos-rem" rows="2"></textarea></div>
+
+          <div style="height:10px"></div>
+          <div class="field">
+            <label>Items (All) - quick list</label>
+            <div class="table-container" style="height:260px">
+              <div class="table-scroll">
+                <table>
+                  <thead><tr><th>Code</th><th>Name</th><th class="text-right">Stock</th><th class="text-right">Price</th><th></th></tr></thead>
+                  <tbody id="pos-items-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:auto"></div>
+          <div class="row">
+            <button class="btn col" onclick="holdBill()">HOLD (F6)</button>
+            <button class="btn col" onclick="recallBill()">RECALL (F7)</button>
+          </div>
+        </div>
+
+        <!-- center -->
+        <div class="panel">
+          <div class="field">
+            <label>Scan Barcode / Search Item</label>
+            <input id="pos-search" placeholder="Type item name or code..." oninput="filterPosList()" />
+          </div>
+
+          <div class="table-container" style="height:180px">
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Code</th><th>Name</th><th class="text-right">Price</th><th class="text-right">Stock</th><th></th>
+                  </tr>
+                </thead>
+                <tbody id="pos-search-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Cart Items</label>
+          </div>
+          <div class="table-container" style="flex:1">
+            <div class="table-scroll">
+              <table id="pos-table">
+                <thead><tr><th>Item</th><th>Unit</th><th>Qty</th><th class="text-right">Price</th><th class="text-right">Total</th><th></th></tr></thead>
+                <tbody id="pos-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- right -->
+        <div class="panel">
+          <div class="field"><label>Date</label><input type="date" id="pos-date"></div>
+          <div class="pos-totals">
+            <div class="pos-row"><span>Subtotal</span><span id="pos-sub">0.00</span></div>
+            <div class="pos-row"><span>Discount</span><input type="number" id="pos-disc" value="0" style="width:70px; text-align:right" oninput="calcPos()"></div>
+            <div class="pos-row"><span>Tax (%)</span><input type="number" id="pos-tax" value="0" style="width:70px; text-align:right" oninput="calcPos()"></div>
+            <div class="pos-row"><span>Fixed Tax</span><input type="number" id="pos-fixed-tax" value="0" style="width:70px; text-align:right" oninput="calcPos()"></div>
+            <div class="pos-row"><span>Service Chg</span><input type="number" id="pos-svc" value="0" style="width:70px; text-align:right" oninput="calcPos()"></div>
+            <div class="grand-total" id="pos-net">0.00</div>
+          </div>
+          <div class="field"><label>Tendered</label><input type="number" id="pos-tend" oninput="calcChange()"></div>
+          <div class="pos-row" style="font-size:1.1rem; font-weight:bold"><span>Change:</span><span id="pos-change">0.00</span></div>
+          
+          <div class="pos-controls">
+            <div style="display:flex; gap:8px; margin-top:10px">
+              <button class="btn btn-primary" style="height:46px; flex:1" onclick="saveOrPrint('save')"><i class="fa fa-save"></i> Save Bill</button>
+              <!-- per request: removed plain Print (No Save) option from POS -->
+              <button class="btn btn-primary" style="height:46px; flex:1" onclick="saveOrPrint('saveprint')"><i class="fa fa-save"></i> Save & Print</button>
+            </div>
+            <button class="btn btn-danger btn-block" style="margin-top:8px;" onclick="clearPos()">CLEAR</button>
+            <div style="height:6px"></div>
+            <!-- quick browse saved/held bills while in POS -->
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button class="btn btn-sm" onclick="billPrev()"><i class="fa fa-chevron-left"></i> Prev Bill</button>
+              <button class="btn btn-sm" onclick="billNext()">Next Bill <i class="fa fa-chevron-right"></i></button>
+              <div style="flex:1"></div>
+              <button class="btn btn-sm" onclick="openBillBrowser()"><i class="fa fa-list"></i> Open Bill Viewer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div id="inventory" class="view">
+      <div class="row" style="margin-bottom:10px; justify-content:space-between">
+        <input id="inv-search" placeholder="Search items..." style="width:300px" onkeyup="renderInv()">
+        <button class="btn btn-primary" onclick="newItem()"><i class="fa fa-plus"></i> Add Item</button>
+      </div>
+      <div class="table-container"><div class="table-scroll">
+        <table>
+          <thead><tr><th>Code</th><th>Name</th><th>Loc</th><th class="text-right">Cost</th><th class="text-right">Price</th><th>Base Unit</th><th class="text-right">Stock</th><th>Action</th></tr></thead>
+          <tbody id="inv-body"></tbody>
+        </table>
+      </div></div>
+    </div>
+
+    <!-- PURCHASE -->
+    <div id="purchase" class="view">
+      <div class="row" style="margin-bottom:10px;">
+        <div class="panel col">
+          <div class="field">
+            <label>Supplier</label>
+            <div class="row">
+              <select id="pur-sup"></select>
+              <button class="btn btn-primary" onclick="modal('m-sup')">+</button>
+            </div>
+          </div>
+          <div class="field"><label>Date</label><input type="date" id="pur-date"></div>
+        </div>
+        <div class="panel col">
+          <div class="field"><label>Search Item</label>
+            <input id="pur-search" placeholder="Type name/code" oninput="filterPurchaseList()">
+          </div>
+          <div class="table-container">
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>Code</th><th>Name</th><th class="text-right">Cost</th><th class="text-right">Stock</th><th></th></tr></thead>
+                <tbody id="pur-search-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="field"><label>Purchase Items</label></div>
+        <div class="table-container">
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Item</th><th>Qty</th><th class="text-right">Cost</th><th class="text-right">Total</th><th></th></tr></thead>
+              <tbody id="pur-body"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="pos-row" style="margin-top:8px;"><span>Total</span><span id="pur-total">0.00</span></div>
+        <button class="btn btn-primary" style="margin-top:8px;" onclick="savePurchase()"><i class="fa fa-save"></i> Save Purchase</button>
+        <button class="btn" style="margin-top:8px;" onclick="printPurchaseReport()"><i class="fa fa-print"></i> Print Purchase Report</button>
+      </div>
+    </div>
+
+    <!-- LEDGER -->
+    <div id="ledger" class="view">
+      <div class="row" style="height:100%; gap:20px;">
+        <div class="panel col">
+          <div class="row" style="align-items:center; border-bottom:1px solid var(--border); padding-bottom:5px;">
+            <strong style="color:var(--accent-soft)">CUSTOMERS</strong>
+            <input id="search-cust" placeholder="Search..." style="margin-left:auto; width:150px" onkeyup="renderLedgers()">
+          </div>
+
+          <!-- Customer Credit Report Controls -->
+          <div style="margin-top:10px; margin-bottom:10px; display:flex; gap:8px; align-items:flex-end;">
+            <div style="flex:1">
+              <label class="small-muted">Customer (creditors)</label>
+              <select id="led-credit-cust" style="width:100%"></select>
+            </div>
+            <div style="width:150px">
+              <label class="small-muted">From</label>
+              <input type="date" id="led-rpt-start">
+            </div>
+            <div style="width:150px">
+              <label class="small-muted">To</label>
+              <input type="date" id="led-rpt-end">
+            </div>
+            <div>
+              <button class="btn btn-sm btn-primary" style="height:36px" onclick="printCustomerCreditReport()"><i class="fa fa-print"></i> Print Credit Report</button>
+            </div>
+          </div>
+
+          <div class="table-container"><div class="table-scroll">
+            <table><thead><tr><th>Name</th><th class="text-right">Balance</th><th>Act</th></tr></thead><tbody id="led-cust"></tbody></table>
+          </div></div>
+        </div>
+
+        <div class="panel col">
+          <div class="row" style="align-items:center; border-bottom:1px solid var(--border); padding-bottom:5px;">
+            <strong style="color:var(--warn)">SUPPLIERS</strong>
+            <input id="search-sup" placeholder="Search..." style="margin-left:auto; width:150px" onkeyup="renderLedgers()">
+            <button class="btn btn-sm" onclick="modal('m-sup')">+</button>
+          </div>
+
+          <!-- Supplier Report Controls -->
+          <div style="margin-top:10px; margin-bottom:10px; display:flex; gap:8px; align-items:flex-end;">
+            <div style="flex:1">
+              <label class="small-muted">Supplier</label>
+              <select id="led-sup-select" style="width:100%"></select>
+            </div>
+            <div style="width:150px">
+              <label class="small-muted">From</label>
+              <input type="date" id="led-sup-start">
+            </div>
+            <div style="width:150px">
+              <label class="small-muted">To</label>
+              <input type="date" id="led-sup-end">
+            </div>
+            <div>
+              <button class="btn btn-sm btn-primary" style="height:36px" onclick="printSupplierReport()"><i class="fa fa-print"></i> Print Supplier Report</button>
+            </div>
+          </div>
+
+          <div class="table-container"><div class="table-scroll">
+            <table><thead><tr><th>Name</th><th class="text-right">Payable</th><th>Act</th></tr></thead><tbody id="led-sup"></tbody></table>
+          </div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPENSES -->
+    <div id="expenses" class="view">
+      <div class="row" style="margin-bottom:10px; justify-content:space-between">
+        <h3>Expense Tracker</h3>
+        <button class="btn btn-primary" onclick="modal('m-exp')">Add Expense</button>
+      </div>
+      <div class="table-container"><div class="table-scroll">
+        <table><thead><tr><th>Date</th><th>Category</th><th>Payee</th><th>Description</th><th class="text-right">Amount</th></tr></thead><tbody id="exp-body"></tbody></table>
+      </div></div>
+    </div>
+
+    <!-- BANKING -->
+    <div id="banking" class="view">
+      <div class="row" style="margin-bottom:10px; justify-content:space-between">
+        <h3>Banking & Accounts</h3>
+        <button class="btn btn-primary" onclick="modal('m-bank')">Add Bank</button>
+      </div>
+      <div class="table-container"><div class="table-scroll">
+        <table><thead><tr><th>Bank Name</th><th>Account No</th><th class="text-right">Balance</th></tr></thead><tbody id="bank-body"></tbody></table>
+      </div></div>
+    </div>
+
+    <!-- HR / Employees -->
+    <div id="hr" class="view">
+      <div class="row" style="margin-bottom:10px; justify-content:space-between">
+        <h3>Employees & Attendance</h3>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-primary" onclick="modal('m-emp')">Add Employee</button>
+          <button class="btn" onclick="modal('m-att')">Mark Attendance</button>
+          <button class="btn" onclick="printAttendanceReport()">Attendance Report</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div style="margin-bottom:8px; font-weight:700">Employee List</div>
+        <div class="table-container" style="height:260px">
+          <div class="table-scroll">
+            <table><thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Act</th></tr></thead><tbody id="emp-body"></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="settings" class="view">
+      <div class="row">
+        <div class="panel col" style="max-width:600px">
+          <h3>Company Info (For Bill)</h3>
+          <div class="field"><label>Company Name</label><input id="set-name"></div>
+          <div class="field"><label>Address / Phone</label><textarea id="set-addr" rows="3"></textarea></div>
+          <div class="field"><label>Logo URL (Optional)</label><input id="set-logo" placeholder="https://... or data:image/png;base64,..."></div>
+          <div class="field"><label>Default tax mode</label>
+            <select id="set-tax-mode" onchange="toggleFixedTaxSettings()">
+              <option value="percent">Percentage (per-bill %)</option>
+              <option value="fixed">Fixed amount</option>
+            </select>
+          </div>
+          <div id="fixed-tax-settings" class="field" style="display:none">
+            <label>Fixed tax amount</label>
+            <input type="number" id="set-fixed-tax" value="0">
+          </div>
+          <div class="field"><label>Default tax % (if percent mode)</label><input type="number" id="set-tax-percent" value="0"></div>
+          <button class="btn btn-primary" onclick="saveSettings()">Save Info</button>
+        </div>
+        <div class="panel col" style="max-width:300px; border-color:var(--danger)">
+          <h3 class="text-danger">Danger Zone</h3>
+          <p>This will wipe all sales, items, and accounts.</p>
+          <button class="btn btn-danger" onclick="hardReset()">HARD RESET (Pass: 1234)</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- EXCEL STYLE SEARCH SOURCE -->
+<datalist id="dl-items"></datalist>
+
+<!-- ITEM MODAL -->
+<div class="modal-overlay" id="m-item"><div class="modal">
+  <div class="modal-head"><span id="mi-title">Item Details</span><button class="btn btn-danger" onclick="closeModal('m-item')">X</button></div>
+  <input type="hidden" id="mi-id">
+  <div class="row"><div class="field col"><label>Barcode</label><input id="mi-code"></div><div class="field col"><label>Name</label><input id="mi-name"></div></div>
+  <div class="row"><div class="field col"><label>Cost</label><input type="number" id="mi-cost"></div><div class="field col"><label>Price (Base)</label><input type="number" id="mi-price"></div></div>
+  <div class="row"><div class="field col"><label>Stock (Base)</label><input type="number" id="mi-stock"></div><div class="field col"><label>Low Alert</label><input type="number" id="mi-alert" value="5"></div></div>
+  <div class="field"><label>Location/Shelf</label><input id="mi-loc"></div>
+  <div style="border-top:1px solid var(--border); padding-top:5px; margin-top:5px;"><strong>Units & Conversion</strong></div>
+  <div class="row">
+    <div class="field col"><label>Base Unit (e.g. Pcs, g)</label>
+      <select id="mi-u1"></select>
+    </div>
+    <div class="field col"><label>Alt Unit (optional)</label>
+      <select id="mi-u2"></select>
+    </div>
+  </div>
+  <div class="field"><label>How many base units in alt? (e.g. 1000 if base=g and alt=kg)</label><input type="number" id="mi-conv" value="1"></div>
+  <button class="btn btn-primary" onclick="saveItem()">Save Item</button>
+</div></div>
+
+<!-- CUSTOMER / SUPPLIER / BANK / EXPENSE / PAYMENT MODALS -->
+<div class="modal-overlay" id="m-cust"><div class="modal">
+  <div class="modal-head"><span>New Customer</span><button class="btn btn-danger" onclick="closeModal('m-cust')">X</button></div>
+  <div class="field"><label>Name</label><input id="mc-name"></div><div class="field"><label>Phone</label><input id="mc-phone"></div>
+  <button class="btn btn-primary" onclick="saveContact('customers','mc')">Save</button>
+</div></div>
+
+<div class="modal-overlay" id="m-sup"><div class="modal">
+  <div class="modal-head"><span>New Supplier</span><button class="btn btn-danger" onclick="closeModal('m-sup')">X</button></div>
+  <div class="field"><label>Name</label><input id="ms-name"></div><div class="field"><label>Phone</label><input id="ms-phone"></div>
+  <button class="btn btn-primary" onclick="saveContact('suppliers','ms')">Save</button>
+</div></div>
+
+<div class="modal-overlay" id="m-bank"><div class="modal">
+  <div class="modal-head"><span>New Bank</span><button class="btn btn-danger" onclick="closeModal('m-bank')">X</button></div>
+  <div class="field"><label>Bank Name</label><input id="mb-name"></div><div class="field"><label>Acct No</label><input id="mb-acc"></div><div class="field"><label>Opening Bal</label><input type="number" id="mb-bal"></div>
+  <button class="btn btn-primary" onclick="saveBank()">Save</button>
+</div></div>
+
+<div class="modal-overlay" id="m-exp"><div class="modal">
+  <div class="modal-head"><span>New Expense</span><button class="btn btn-danger" onclick="closeModal('m-exp')">X</button></div>
+  <div class="field"><label>Category</label><select id="me-cat"><option>Food/Tea</option><option>Utilities</option><option>Rent</option><option>Wages</option><option>Other</option></select></div>
+  <div class="field"><label>Payee (optional)</label><input id="me-payee"></div>
+  <div class="field"><label>Description</label><input id="me-desc"></div><div class="field"><label>Amount</label><input type="number" id="me-amt"></div>
+  <div class="field"><label>Assign to Employee (optional)</label><select id="me-emp"><option value="">-- none --</option></select></div>
+  <button class="btn btn-primary" onclick="saveExp()">Save</button>
+</div></div>
+
+<div class="modal-overlay" id="m-pay"><div class="modal">
+  <div class="modal-head"><span id="mp-title">Transaction</span><button class="btn btn-danger" onclick="closeModal('m-pay')">X</button></div>
+  <input type="hidden" id="mp-id"><input type="hidden" id="mp-type">
+  <h3 id="mp-name" style="text-align:center; color:var(--accent-soft)"></h3>
+  <div class="field"><label>Amount</label><input type="number" id="mp-amt"></div>
+  <div class="field"><label>Date</label><input type="date" id="mp-date"></div>
+  <button class="btn btn-primary" onclick="processPayment()">Confirm & Print</button>
+</div></div>
+
+<!-- EMPLOYEE MODALS -->
+<div class="modal-overlay" id="m-emp"><div class="modal">
+  <div class="modal-head"><span>New Employee</span><button class="btn btn-danger" onclick="closeModal('m-emp')">X</button></div>
+  <div class="field"><label>Employee ID</label><input id="me-id"></div>
+  <div class="field"><label>Name</label><input id="me-name"></div>
+  <div class="field"><label>Role</label><input id="me-role"></div>
+  <button class="btn btn-primary" onclick="saveEmployee()">Save Employee</button>
+</div></div>
+
+<div class="modal-overlay" id="m-att"><div class="modal">
+  <div class="modal-head"><span>Mark Attendance</span><button class="btn btn-danger" onclick="closeModal('m-att')">X</button></div>
+  <div class="field"><label>Date</label><input type="date" id="att-date"></div>
+  <div class="field"><label>Employee</label><select id="att-emp"></select></div>
+  <div class="field"><label>Status</label><select id="att-status"><option>Present</option><option>Absent</option><option>Leave</option></select></div>
+  <div class="field"><label>Shift / Note</label><input id="att-shift"></div>
+  <button class="btn btn-primary" onclick="saveAttendance()">Save Attendance</button>
+</div></div>
+
+<!-- BILL VIEW / RETURN MODAL -->
+<div class="modal-overlay" id="m-bill-view"><div class="modal" style="max-width:800px">
+  <div class="modal-head"><span>Bill Viewer</span><button class="btn btn-danger" onclick="closeBillViewer()"><!---->X</button></div>
+  <div id="bv-body" style="max-height:60vh; overflow:auto"></div>
+  <div style="display:flex; gap:8px; justify-content:flex-end;">
+    <button class="btn" onclick="closeBillViewer()">Close</button>
+    <button class="btn btn-primary" onclick="billPrintCurrent()"><i class="fa fa-print"></i> Print</button>
+    <button class="btn btn-primary" onclick="billEditCurrent()"><i class="fa fa-pen"></i> Edit</button>
+    <button class="btn btn-danger" onclick="executeReturnFromViewer()"><i class="fa fa-undo"></i> Process Return</button>
+  </div>
+</div></div>
+
+<div id="print-zone"></div>
+
+<script>
+/* DATA MODEL */
+const DB_KEY = 'swan_erp_final_v2';
+let db = {
+  info: { name: "Company Name", addr: "Address Here", logo: "" },
+  items: [],
+  customers: [{id:1, name:"Walk-in", phone:"", bal:0}],
+  suppliers: [],
+  sales: [],
+  expenses: [],
+  banks: [],
+  heldBills: [],
+  transactions: [], // payments, purchases, sale pointers
+  employees: [],
+  attendance: [],
+  miscProfits: [] // new: store misc profit entries {id,date,desc,amt}
+};
+
+let cart = [];
+let purCart = [];
+let currentBillIndex = -1; // index into combined bills list (held first, then saved)
+let editingSaleId = null;
+
+/* UNITS OPTIONS */
+const UNIT_OPTIONS = ['Pcs','g','kg','lb','m','cm','inch','yard','litre','ml'];
+
+/* INIT */
+window.onload = () => {
+  if(localStorage.getItem(DB_KEY)) {
+    try { db = JSON.parse(localStorage.getItem(DB_KEY)); } catch(e){ console.error('db parse', e); }
+  }
+  setInterval(()=>document.getElementById('clock').innerText=new Date().toLocaleTimeString(),1000);
+  const today = new Date().toISOString().split('T')[0];
+  ['pos-date','rpt-start','rpt-end','mp-date','pur-date','led-rpt-start','led-rpt-end','led-sup-start','led-sup-end','att-date','led-rpt-start'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value=today;
+  });
+  // initialize unit selects
+  const u1 = document.getElementById('mi-u1'), u2 = document.getElementById('mi-u2');
+  UNIT_OPTIONS.forEach(u => { u1.innerHTML += `<option>${u}</option>`; u2.innerHTML += `<option>${u}</option>`; });
+
+  // if settings contain logo set it
+  if(db.info && db.info.logo){
+    const el = document.getElementById('brand-logo');
+    if(el) el.src = db.info.logo;
+  }
+
+  updateUI();
+};
+
+/* SAVE DB helper */
+function saveDB(){ localStorage.setItem(DB_KEY, JSON.stringify(db)); updateUI(); }
+
+/* NAV */
+function nav(id, ev){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const el = document.getElementById(id);
+  if(el) el.classList.add('active');
+  document.querySelectorAll('.ribbon-btn').forEach(b=>b.classList.remove('active'));
+  if(ev && ev.currentTarget) ev.currentTarget.classList.add('active');
+  if(id==='dashboard') calcDash();
+}
+
+/* UTILITY */
+function modal(id){ document.getElementById(id).style.display='flex'; }
+function closeModal(id){ document.getElementById(id).style.display='none'; }
+
+function format(num){ return (num||0).toFixed(2); }
+function setTheme(theme){ document.body.className = theme; document.getElementById('theme-selector').value=theme; }
+
+/* GLOBAL UI REFRESH */
+function updateUI(){
+  renderInv();
+  renderPosLists();
+  renderPurchaseLists();
+  renderLedgers();
+  renderExpenses();
+  renderBanks();
+  renderEmployees();
+  renderAttendance();
+  applySettingsToPos();
+  calcDash();
+}
+
+/* INVENTORY FUNCTIONS */
+function renderInv(){
+  const tbody = document.getElementById('inv-body');
+  tbody.innerHTML = '';
+  const q = (document.getElementById('inv-search').value||'').toLowerCase();
+  db.items.forEach(it=>{
+    if(q && !(`${it.code} ${it.name}`.toLowerCase().includes(q))) return;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${it.code||''}</td>
+      <td>${it.name||''}</td>
+      <td>${it.loc||''}</td>
+      <td class="text-right">${format(it.cost)}</td>
+      <td class="text-right">${format(it.price)}</td>
+      <td>${it.u1||'Pcs'}</td>
+      <td class="text-right">${format(it.stock||0)}</td>
+      <td>
+        <button class="btn btn-sm" onclick="editItem(${it.id})"><i class="fa fa-pen"></i></button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // datalist for search if needed
+  const dl = document.getElementById('dl-items');
+  dl.innerHTML = '';
+  db.items.forEach(it=>{
+    dl.innerHTML += `<option value="${it.code} - ${it.name}">`;
+  });
+}
+
+function newItem(){
+  document.getElementById('mi-title').innerText='New Item';
+  document.getElementById('mi-id').value='';
+  ['mi-code','mi-name','mi-cost','mi-price','mi-stock','mi-alert','mi-loc','mi-conv'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    if(id==='mi-alert') el.value=5;
+    else if(id==='mi-conv') el.value=1;
+    else el.value='';
+  });
+  modal('m-item');
+}
+
+function editItem(id){
+  const it = db.items.find(x=>x.id===id);
+  if(!it) return;
+  document.getElementById('mi-title').innerText='Edit Item';
+  document.getElementById('mi-id').value=it.id;
+  document.getElementById('mi-code').value=it.code||'';
+  document.getElementById('mi-name').value=it.name||'';
+  document.getElementById('mi-cost').value=it.cost||0;
+  document.getElementById('mi-price').value=it.price||0;
+  document.getElementById('mi-stock').value=it.stock||0;
+  document.getElementById('mi-alert').value=it.alert||5;
+  document.getElementById('mi-loc').value=it.loc||'';
+  document.getElementById('mi-u1').value=it.u1||'Pcs';
+  document.getElementById('mi-u2').value=it.u2||'';
+  document.getElementById('mi-conv').value=it.conv||1;
+  modal('m-item');
+}
+
+function saveItem(){
+  const id = document.getElementById('mi-id').value;
+  const obj = {
+    id: id? Number(id) : Date.now(),
+    code: document.getElementById('mi-code').value.trim(),
+    name: document.getElementById('mi-name').value.trim(),
+    cost: Number(document.getElementById('mi-cost').value||0),
+    price: Number(document.getElementById('mi-price').value||0),
+    stock: Number(document.getElementById('mi-stock').value||0),
+    alert: Number(document.getElementById('mi-alert').value||5),
+    loc: document.getElementById('mi-loc').value.trim(),
+    u1: document.getElementById('mi-u1').value,
+    u2: document.getElementById('mi-u2').value,
+    conv: Number(document.getElementById('mi-conv').value||1)
+  };
+  const idx = db.items.findIndex(x=>x.id===obj.id);
+  if(idx>=0) db.items[idx]=obj; else db.items.push(obj);
+  closeModal('m-item');
+  saveDB();
+}
+
+/* POS RENDER HELPERS */
+function renderPosLists(){
+  // customers
+  const sel = document.getElementById('pos-cust');
+  sel.innerHTML = '';
+  db.customers.forEach(c=>{
+    sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+  });
+  sel.value = db.customers[0]?.id || '';
+
+  // banks
+  const bsel = document.getElementById('pos-bank');
+  bsel.innerHTML = '';
+  db.banks.forEach(b=>{ bsel.innerHTML += `<option value="${b.id}">${b.name}</option>`; });
+
+  // items quick list
+  const tbody = document.getElementById('pos-items-body');
+  tbody.innerHTML = '';
+  db.items.forEach(it=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${it.code}</td>
+      <td>${it.name}</td>
+      <td class="text-right">${format(it.stock||0)}</td>
+      <td class="text-right">${format(it.price||0)}</td>
+      <td><button class="btn btn-sm" onclick="addToCart(${it.id})"><i class="fa fa-plus"></i></button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // search result list initially same as items
+  filterPosList();
+}
+
+function filterPosList(){
+  const q = (document.getElementById('pos-search').value||'').toLowerCase();
+  const tbody = document.getElementById('pos-search-body');
+  tbody.innerHTML='';
+  db.items.forEach(it=>{
+    if(q && !(`${it.code} ${it.name}`.toLowerCase().includes(q))) return;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${it.code}</td>
+      <td>${it.name}</td>
+      <td class="text-right">${format(it.price||0)}</td>
+      <td class="text-right">${format(it.stock||0)}</td>
+      <td><button class="btn btn-sm" onclick="addToCart(${it.id})"><i class="fa fa-plus"></i></button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* CART */
+function addToCart(id){
+  const it = db.items.find(x=>x.id===id);
+  if(!it) return;
+  const existing = cart.find(x=>x.id===id && x.unit=== (it.u1||'Pcs'));
+  if(existing){ existing.qty += 1; }
+  else {
+    cart.push({id:it.id, name:it.name, unit:it.u1||'Pcs', qty:1, price:it.price||0, cost:it.cost||0});
+  }
+  renderCart();
+}
+
+function changeCartQty(idx, val){
+  const c = cart[idx]; if(!c) return;
+  c.qty = Number(val||0);
+  if(c.qty<=0) cart.splice(idx,1);
+  renderCart();
+}
+
+function changeCartUnit(idx, unit){
+  const c = cart[idx]; if(!c) return;
+  const it = db.items.find(x=>x.id===c.id);
+  if(!it) return;
+  if(unit===it.u1){
+    c.unit = it.u1;
+    c.price = it.price;
+    c.cost = it.cost;
+  } else if(unit===it.u2){
+    c.unit = it.u2;
+    c.price = (it.price||0) * (it.conv||1);
+    c.cost = (it.cost||0) * (it.conv||1);
+  }
+  renderCart();
+}
+
+function changeCartPrice(idx, val){
+  const c = cart[idx]; if(!c) return;
+  c.price = Number(val||0);
+  renderCart();
+}
+
+function removeCart(idx){
+  cart.splice(idx,1);
+  renderCart();
+}
+
+function renderCart(){
+  const tbody = document.getElementById('pos-body');
+  tbody.innerHTML='';
+  cart.forEach((c,idx)=>{
+    const it = db.items.find(x=>x.id===c.id);
+    const base = it ? it.u1 : 'Pcs';
+    const alt = it ? it.u2 : '';
+    const opts = [base];
+    if(alt) opts.push(alt);
+    const total = (c.qty||0) * (c.price||0);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${c.name}</td>
+      <td>
+        <select onchange="changeCartUnit(${idx}, this.value)">
+          ${opts.map(u=>`<option ${u===c.unit?'selected':''}>${u}</option>`).join('')}
+        </select>
+      </td>
+      <td><input type="number" value="${c.qty}" style="width:70px" oninput="changeCartQty(${idx}, this.value)"></td>
+      <td class="text-right"><input type="number" value="${c.price}" style="width:80px; text-align:right" oninput="changeCartPrice(${idx}, this.value)"></td>
+      <td class="text-right">${format(total)}</td>
+      <td><button class="btn btn-sm" onclick="removeCart(${idx})"><i class="fa fa-times"></i></button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  calcPos();
+}
+
+/* POS TOTALS */
+function calcPos(){
+  let sub = 0, gross=0;
+  cart.forEach(c=>{
+    const line = (c.qty||0) * (c.price||0);
+    sub += line;
+    gross += (c.qty||0) * ((c.price||0) - (c.cost||0));
+  });
+  document.getElementById('pos-sub').innerText=format(sub);
+  const disc = Number(document.getElementById('pos-disc').value||0);
+  const taxP = Number(document.getElementById('pos-tax').value||0);
+  const fixedTax = Number(document.getElementById('pos-fixed-tax').value||0);
+  const svc = Number(document.getElementById('pos-svc').value||0);
+  let net = sub - disc;
+  if(taxP>0) net += net * taxP/100;
+  net += fixedTax + svc;
+  document.getElementById('pos-net').innerText=format(net);
+  calcChange();
+}
+
+function calcChange(){
+  const net = Number(document.getElementById('pos-net').innerText||0);
+  const tend = Number(document.getElementById('pos-tend').value||0);
+  document.getElementById('pos-change').innerText = format(tend-net);
+}
+
+function clearPos(){
+  cart = [];
+  editingSaleId = null;
+  document.getElementById('pos-disc').value=0;
+  document.getElementById('pos-tax').value=0;
+  document.getElementById('pos-fixed-tax').value=0;
+  document.getElementById('pos-svc').value=0;
+  document.getElementById('pos-tend').value='';
+  document.getElementById('pos-rem').value='';
+  document.getElementById('pos-mode').value='Cash';
+  toggleBank('pos-mode','pos-bank-row');
+  renderCart();
+}
+
+/* HOLD / RECALL BILL */
+function holdBill(){
+  if(!cart.length){ alert('Cart empty'); return; }
+  const obj = {
+    id: Date.now(),
+    cart: JSON.parse(JSON.stringify(cart)),
+    date: document.getElementById('pos-date').value,
+    cust: Number(document.getElementById('pos-cust').value||1),
+    mode: document.getElementById('pos-mode').value,
+    bankId: document.getElementById('pos-bank').value || null,
+    disc: Number(document.getElementById('pos-disc').value||0),
+    taxP: Number(document.getElementById('pos-tax').value||0),
+    fixedTax: Number(document.getElementById('pos-fixed-tax').value||0),
+    svc: Number(document.getElementById('pos-svc').value||0),
+    remarks: document.getElementById('pos-rem').value||''
+  };
+  db.heldBills.push(obj);
+  saveDB();
+  clearPos();
+  alert('Bill held');
+}
+
+function recallBill(){
+  if(!db.heldBills.length){ alert('No held bills'); return; }
+  const last = db.heldBills.pop();
+  cart = JSON.parse(JSON.stringify(last.cart));
+  document.getElementById('pos-date').value = last.date;
+  document.getElementById('pos-cust').value = last.cust;
+  document.getElementById('pos-mode').value = last.mode;
+  toggleBank('pos-mode','pos-bank-row');
+  if(last.bankId) document.getElementById('pos-bank').value = last.bankId;
+  document.getElementById('pos-disc').value = last.disc;
+  document.getElementById('pos-tax').value = last.taxP;
+  document.getElementById('pos-fixed-tax').value = last.fixedTax || 0;
+  document.getElementById('pos-svc').value = last.svc;
+  document.getElementById('pos-rem').value = last.remarks;
+  saveDB();
+  renderCart();
+}
+
+/* SAVE SALE + PRINT */
+function saveOrPrint(mode){
+  if(!cart.length){ alert('Cart empty'); return; }
+  const date = document.getElementById('pos-date').value;
+  const custId = Number(document.getElementById('pos-cust').value||1);
+  const payMode = document.getElementById('pos-mode').value;
+  const bankId = document.getElementById('pos-bank').value || null;
+  const disc = Number(document.getElementById('pos-disc').value||0);
+  const taxP = Number(document.getElementById('pos-tax').value||0);
+  const fixedTax = Number(document.getElementById('pos-fixed-tax').value||0);
+  const svc = Number(document.getElementById('pos-svc').value||0);
+  const remarks = document.getElementById('pos-rem').value||'';
+  const net = Number(document.getElementById('pos-net').innerText||0);
+  let sub=0, gross=0;
+  cart.forEach(c=>{
+    sub += (c.qty||0)*(c.price||0);
+    gross += (c.qty||0)*((c.price||0)-(c.cost||0));
+  });
+  const invoice = editingSaleId || (db.sales.length ? db.sales[db.sales.length-1].invoice+1 : 1);
+  const obj = {
+    id: editingSaleId || Date.now(),
+    invoice,
+    date,
+    custId,
+    payMode,
+    bankId,
+    items: JSON.parse(JSON.stringify(cart)),
+    disc, taxP, fixedTax, svc, sub, gross, net,
+    remarks
+  };
+
+  if(editingSaleId){
+    const idx = db.sales.findIndex(x=>x.id===editingSaleId);
+    if(idx>=0){
+      reverseSaleEffects(db.sales[idx]);
+      db.sales[idx]=obj;
+    }
+  } else {
+    db.sales.push(obj);
+  }
+
+  applySaleEffects(obj);
+  editingSaleId=null;
+  saveDB();
+
+  if(mode==='saveprint'){
+    printBill(obj);
+  }
+  clearPos();
+}
+
+/* APPLY & REVERSE SALE EFFECTS */
+function applySaleEffects(sale){
+  // reduce stock
+  sale.items.forEach(it=>{
+    const i = db.items.find(x=>x.id===it.id);
+    if(!i) return;
+    let qtyBase = it.qty||0;
+    if(i.u2 && it.unit===i.u2) qtyBase *= (i.conv||1);
+    i.stock = (i.stock||0) - qtyBase;
+  });
+
+  // update customer/supplier/bank
+  const c = db.customers.find(x=>x.id===sale.custId);
+  if(c && c.name!=='Walk-in' && sale.payMode==='Credit'){
+    c.bal = (c.bal||0) + (sale.net||0);
+  }
+  if(sale.payMode==='Online' && sale.bankId){
+    const b = db.banks.find(x=>x.id==sale.bankId);
+    if(b) b.bal = (b.bal||0) + (sale.net||0);
+  }
+
+  db.transactions.push({
+    id: Date.now(),
+    type: 'sale',
+    ref: sale.id,
+    date: sale.date,
+    amt: sale.net
+  });
+}
+
+function reverseSaleEffects(sale){
+  // restore stock and reverse balances
+  sale.items.forEach(it=>{
+    const i = db.items.find(x=>x.id===it.id);
+    if(!i) return;
+    let qtyBase = it.qty||0;
+    if(i.u2 && it.unit===i.u2) qtyBase *= (i.conv||1);
+    i.stock = (i.stock||0) + qtyBase;
+  });
+
+  const c = db.customers.find(x=>x.id===sale.custId);
+  if(c && c.name!=='Walk-in' && sale.payMode==='Credit'){
+    c.bal = (c.bal||0) - (sale.net||0);
+  }
+  if(sale.payMode==='Online' && sale.bankId){
+    const b = db.banks.find(x=>x.id==sale.bankId);
+    if(b) b.bal = (b.bal||0) - (sale.net||0);
+  }
+}
+
+/* BILL BROWSER (SAVED + HELD) */
+function getAllBills(){
+  // map held bills as negative invoices for navigation
+  const held = db.heldBills.map((h,idx)=>({
+    type:'held',
+    invoice:`H-${idx+1}`,
+    obj:h
+  }));
+  const saved = db.sales.map(s=>({
+    type:'sale',
+    invoice:s.invoice,
+    obj:s
+  }));
+  return [...held, ...saved];
+}
+
+function updateBillIndexLabel(){
+  const all = getAllBills();
+  const lab = document.getElementById('bill-index');
+  if(!all.length){ lab.value='No Bills'; return; }
+  if(currentBillIndex<0) currentBillIndex=0;
+  if(currentBillIndex>=all.length) currentBillIndex=all.length-1;
+  const b = all[currentBillIndex];
+  lab.value = `${b.invoice} (${b.type})`;
+}
+
+function billPrev(){
+  const all = getAllBills();
+  if(!all.length){ alert('No bills'); return; }
+  if(currentBillIndex<=0) currentBillIndex=all.length-1; else currentBillIndex--;
+  updateBillIndexLabel();
+  openBillViewerCurrent();
+}
+
+function billNext(){
+  const all = getAllBills();
+  if(!all.length){ alert('No bills'); return; }
+  if(currentBillIndex>=all.length-1) currentBillIndex=0; else currentBillIndex++;
+  updateBillIndexLabel();
+  openBillViewerCurrent();
+}
+
+function billPrintCurrent(){
+  const all = getAllBills();
+  if(!all.length){ alert('No bills'); return; }
+  const b = all[currentBillIndex];
+  if(b.type==='sale') printBill(b.obj);
+  else alert('Held bill must be recalled via POS to print');
+}
+
+function billEditCurrent(){
+  const all = getAllBills();
+  if(!all.length){ alert('No bills'); return; }
+  const b = all[currentBillIndex];
+  if(b.type!=='sale'){ alert('Only saved sales can be edited'); return; }
+  loadSaleIntoPos(b.obj);
+  closeBillViewer();
+}
+
+function billReturnCurrent(){
+  const all = getAllBills();
+  if(!all.length){ alert('No bills'); return; }
+  const b = all[currentBillIndex];
+  if(b.type!=='sale'){ alert('Only saved sales can be returned'); return; }
+  if(!confirm('Return this bill? This will restore stock and reverse balances.')) return;
+  processReturn(b.obj);
+  saveDB();
+  alert('Bill returned');
+}
+
+function openBillBrowser(){
+  const all = getAllBills();
+  if(!all.length){ alert('No bills'); return; }
+  currentBillIndex = 0;
+  updateBillIndexLabel();
+  openBillViewerCurrent();
+}
+
+function openBillViewerCurrent(){
+  const all = getAllBills();
+  if(!all.length) return;
+  const b = all[currentBillIndex];
+  const s = b.obj;
+  const div = document.getElementById('bv-body');
+  if(b.type==='held'){
+    div.innerHTML = renderBillHTML({
+      invoice: b.invoice,
+      date: s.date,
+      custId: s.cust,
+      payMode: s.mode,
+      bankId: s.bankId,
+      items: s.cart,
+      disc: s.disc,
+      taxP: s.taxP,
+      fixedTax: s.fixedTax||0,
+      svc: s.svc,
+      net: 0,
+      remarks: s.remarks
+    }, true);
+  }else{
+    div.innerHTML = renderBillHTML(s, true);
+  }
+  modal('m-bill-view');
+}
+
+function closeBillViewer(){
+  closeModal('m-bill-view');
+}
+
+function executeReturnFromViewer(){
+  const all = getAllBills();
+  if(!all.length){ alert('No bills'); return; }
+  const b = all[currentBillIndex];
+  if(b.type!=='sale'){ alert('Only saved sales can be returned'); return; }
+  if(!confirm('Return this bill?')) return;
+  processReturn(b.obj);
+  saveDB();
+  alert('Bill returned');
+}
+
+/* LOAD SALE INTO POS FOR EDIT */
+function loadSaleIntoPos(sale){
+  nav('pos');
+  editingSaleId = sale.id;
+  cart = JSON.parse(JSON.stringify(sale.items));
+  document.getElementById('pos-date').value = sale.date;
+  document.getElementById('pos-cust').value = sale.custId;
+  document.getElementById('pos-mode').value = sale.payMode;
+  toggleBank('pos-mode','pos-bank-row');
+  if(sale.bankId) document.getElementById('pos-bank').value = sale.bankId;
+  document.getElementById('pos-disc').value = sale.disc;
+  document.getElementById('pos-tax').value = sale.taxP;
+  document.getElementById('pos-fixed-tax').value = sale.fixedTax||0;
+  document.getElementById('pos-svc').value = sale.svc;
+  document.getElementById('pos-rem').value = sale.remarks||'';
+  renderCart();
+}
+
+/* RETURN SALE */
+function processReturn(sale){
+  // reverse sale and mark as returned
+  reverseSaleEffects(sale);
+  sale.returned = true;
+  db.transactions.push({
+    id: Date.now(),
+    type: 'return',
+    ref: sale.id,
+    date: sale.date,
+    amt: -Math.abs(sale.net||0)
+  });
+}
+
+/* PRINT BILL */
+function renderBillHTML(sale, fromViewer=false){
+  const c = db.customers.find(x=>x.id===sale.custId) || {name:'Walk-in'};
+  const rows = sale.items.map((it,idx)=>{
+    const line = (it.qty||0)*(it.price||0);
+    return `<tr>
+      <td>${idx+1}</td>
+      <td>${it.name}</td>
+      <td>${it.unit}</td>
+      <td>${format(it.qty)}</td>
+      <td>${format(it.price)}</td>
+      <td>${format(line)}</td>
+    </tr>`;
+  }).join('');
+  const sub = sale.sub || sale.items.reduce((a,it)=>a+(it.qty||0)*(it.price||0),0);
+  const disc = sale.disc||0;
+  const taxP = sale.taxP||0;
+  const fixedTax = sale.fixedTax||0;
+  const svc = sale.svc||0;
+  let net = sub-disc;
+  if(taxP>0) net += net*taxP/100;
+  net += fixedTax+svc;
+
+  const info = db.info||{name:'Company',addr:''};
+  return `
+    <div class="print-header">
+      ${info.logo ? `<img src="${info.logo}">` : ''}
+      <div style="font-size:18px; font-weight:bold;">${info.name}</div>
+      <div style="font-size:12px;">${info.addr||''}</div>
+      <div style="margin-top:8px; font-size:12px;">Invoice: ${sale.invoice} &nbsp; Date: ${sale.date}</div>
+      <div style="font-size:12px;">Customer: ${c.name}</div>
+    </div>
+    <table class="print-table">
+      <thead><tr><th>#</th><th>Item</th><th>Unit</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="margin-top:10px; text-align:right; font-size:12px;">
+      Subtotal: ${format(sub)}<br>
+      Discount: ${format(disc)}<br>
+      Tax%: ${format(taxP)}<br>
+      Fixed Tax: ${format(fixedTax)}<br>
+      Service: ${format(svc)}<br>
+      <strong>Net: ${format(net)}</strong>
+    </div>
+    ${sale.remarks ? `<div style="margin-top:8px; font-size:11px;">Remarks: ${sale.remarks}</div>`:''}
+    ${sale.returned ? `<div style="margin-top:8px; font-size:12px; color:red;">** RETURNED BILL **</div>`:''}
+  `;
+}
+
+function printBill(sale){
+  const zone = document.getElementById('print-zone');
+  zone.innerHTML = renderBillHTML(sale);
+  window.print();
+}
+
+/* CUSTOMER/SUPPLIERS/BANKS/EXPENSES */
+
+function saveContact(type,prefix){
+  const name = document.getElementById(prefix+'-name').value.trim();
+  if(!name){ alert('Name required'); return; }
+  const phone = document.getElementById(prefix+'-phone').value.trim();
+  const arr = db[type];
+  const obj = {id: Date.now(), name, phone, bal:0};
+  arr.push(obj);
+  saveDB();
+  closeModal('m-'+prefix);
+}
+
+function renderLedgers(){
+  // customers
+  const t1 = document.getElementById('led-cust');
+  t1.innerHTML='';
+  const q1 = (document.getElementById('search-cust').value||'').toLowerCase();
+  db.customers.forEach(c=>{
+    if(q1 && !c.name.toLowerCase().includes(q1)) return;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${c.name}</td>
+      <td class="text-right">${format(c.bal||0)}</td>
+      <td>
+        ${c.name!=='Walk-in' ? `<button class="btn btn-sm" onclick="openPayment('${'cust'}',${c.id})">Pay</button>`:''}
+      </td>`;
+    t1.appendChild(tr);
+  });
+
+  // suppliers
+  const t2 = document.getElementById('led-sup');
+  t2.innerHTML='';
+  const q2 = (document.getElementById('search-sup').value||'').toLowerCase();
+  db.suppliers.forEach(s=>{
+    if(q2 && !s.name.toLowerCase().includes(q2)) return;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${s.name}</td>
+      <td class="text-right">${format(s.bal||0)}</td>
+      <td><button class="btn btn-sm" onclick="openPayment('sup',${s.id})">Pay</button></td>`;
+    t2.appendChild(tr);
+  });
+
+  // ledger report dropdowns
+  const cc = document.getElementById('led-credit-cust');
+  cc.innerHTML='';
+  db.customers.filter(c=>c.name!=='Walk-in').forEach(c=>{
+    cc.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+  });
+
+  const ss = document.getElementById('led-sup-select');
+  ss.innerHTML='';
+  db.suppliers.forEach(s=>{
+    ss.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+  });
+}
+
+function openPayment(type,id){
+  const elTitle = document.getElementById('mp-title');
+  const elName = document.getElementById('mp-name');
+  const hiddenType = document.getElementById('mp-type');
+  const hiddenId = document.getElementById('mp-id');
+  hiddenType.value = type;
+  hiddenId.value = id;
+  if(type==='cust'){
+    const c = db.customers.find(x=>x.id===id);
+    elTitle.innerText='Receive Payment';
+    elName.innerText=c?c.name:'';
+  } else {
+    const s = db.suppliers.find(x=>x.id===id);
+    elTitle.innerText='Pay Supplier';
+    elName.innerText=s?s.name:'';
+  }
+  modal('m-pay');
+}
+
+function processPayment(){
+  const type = document.getElementById('mp-type').value;
+  const id = Number(document.getElementById('mp-id').value);
+  const amt = Number(document.getElementById('mp-amt').value||0);
+  const date = document.getElementById('mp-date').value;
+  if(!amt){ alert('Amount required'); return; }
+  if(type==='cust'){
+    const c = db.customers.find(x=>x.id===id);
+    if(c){ c.bal = (c.bal||0) - amt; }
+    db.transactions.push({id:Date.now(), type:'custPay', ref:id, date, amt});
+  } else {
+    const s = db.suppliers.find(x=>x.id===id);
+    if(s){ s.bal = (s.bal||0) - amt; }
+    db.transactions.push({id:Date.now(), type:'supPay', ref:id, date, amt});
+  }
+  saveDB();
+  closeModal('m-pay');
+  alert('Transaction recorded. Use normal printer if you also want a payment slip.');
+}
+
+/* BANKS */
+function saveBank(){
+  const name = document.getElementById('mb-name').value.trim();
+  const acc = document.getElementById('mb-acc').value.trim();
+  const bal = Number(document.getElementById('mb-bal').value||0);
+  if(!name){ alert('Bank name required'); return; }
+  db.banks.push({id:Date.now(), name, acc, bal});
+  saveDB();
+  closeModal('m-bank');
+}
+
+function renderBanks(){
+  const tbody = document.getElementById('bank-body');
+  tbody.innerHTML='';
+  db.banks.forEach(b=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${b.name}</td><td>${b.acc}</td><td class="text-right">${format(b.bal||0)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+/* EXPENSES */
+function saveExp(){
+  const cat = document.getElementById('me-cat').value;
+  const payee = document.getElementById('me-payee').value;
+  const desc = document.getElementById('me-desc').value;
+  const amt = Number(document.getElementById('me-amt').value||0);
+  const empId = document.getElementById('me-emp').value || null;
+  const date = new Date().toISOString().split('T')[0];
+  if(!amt){ alert('Amount required'); return; }
+  db.expenses.push({id:Date.now(), date, cat, payee, desc, amt, empId});
+  saveDB();
+  closeModal('m-exp');
+}
+
+function renderExpenses(){
+  const tbody = document.getElementById('exp-body');
+  tbody.innerHTML='';
+  db.expenses.forEach(e=>{
+    const emp = db.employees.find(x=>x.id===e.empId);
+    const descFull = e.desc || '';
+    const descShow = emp ? `${descFull} (Emp: ${emp.name})` : descFull;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${e.date}</td>
+      <td>${e.cat}</td>
+      <td>${e.payee||''}</td>
+      <td>${descShow}</td>
+      <td class="text-right">${format(e.amt||0)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* PURCHASES */
+function renderPurchaseLists(){
+  const s1 = document.getElementById('pur-sup');
+  s1.innerHTML='';
+  db.suppliers.forEach(s=>{ s1.innerHTML += `<option value="${s.id}">${s.name}</option>`; });
+  filterPurchaseList();
+}
+
+function filterPurchaseList(){
+  const q = (document.getElementById('pur-search').value||'').toLowerCase();
+  const tbody = document.getElementById('pur-search-body');
+  tbody.innerHTML='';
+  db.items.forEach(it=>{
+    if(q && !(`${it.code} ${it.name}`.toLowerCase().includes(q))) return;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${it.code}</td>
+      <td>${it.name}</td>
+      <td class="text-right">${format(it.cost||0)}</td>
+      <td class="text-right">${format(it.stock||0)}</td>
+      <td><button class="btn btn-sm" onclick="addPurchaseItem(${it.id})"><i class="fa fa-plus"></i></button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  renderPurchaseCart();
+}
+
+function addPurchaseItem(id){
+  const it = db.items.find(x=>x.id===id);
+  if(!it) return;
+  const existing = purCart.find(x=>x.id===id);
+  if(existing) existing.qty+=1;
+  else purCart.push({id:it.id, name:it.name, qty:1, cost:it.cost||0});
+  renderPurchaseCart();
+}
+
+function changePurQty(idx,val){
+  const p = purCart[idx]; if(!p) return;
+  p.qty = Number(val||0);
+  if(p.qty<=0) purCart.splice(idx,1);
+  renderPurchaseCart();
+}
+
+function changePurCost(idx,val){
+  const p = purCart[idx]; if(!p) return;
+  p.cost = Number(val||0);
+  renderPurchaseCart();
+}
+
+function removePur(idx){
+  purCart.splice(idx,1);
+  renderPurchaseCart();
+}
+
+function renderPurchaseCart(){
+  const tbody = document.getElementById('pur-body');
+  tbody.innerHTML='';
+  let tot=0;
+  purCart.forEach((p,idx)=>{
+    const line = (p.qty||0)*(p.cost||0);
+    tot+=line;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${p.name}</td>
+      <td><input type="number" value="${p.qty}" style="width:70px" oninput="changePurQty(${idx}, this.value)"></td>
+      <td class="text-right"><input type="number" value="${p.cost}" style="width:80px; text-align:right" oninput="changePurCost(${idx}, this.value)"></td>
+      <td class="text-right">${format(line)}</td>
+      <td><button class="btn btn-sm" onclick="removePur(${idx})"><i class="fa fa-times"></i></button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('pur-total').innerText=format(tot);
+}
+
+/* SAVE PURCHASE */
+function savePurchase(){
+  if(!purCart.length){ alert('No items'); return; }
+  const supId = Number(document.getElementById('pur-sup').value);
+  const date = document.getElementById('pur-date').value;
+  let tot=0;
+  purCart.forEach(p=>{ tot += (p.qty||0)*(p.cost||0); });
+  const purId = Date.now();
+  // update item stock & cost
+  purCart.forEach(p=>{
+    const it = db.items.find(x=>x.id===p.id);
+    if(!it) return;
+    const totalCost = (it.cost||0)*(it.stock||0) + (p.cost||0)*(p.qty||0);
+    const newStock = (it.stock||0)+(p.qty||0);
+    it.stock = newStock;
+    if(newStock>0) it.cost = totalCost/newStock;
+  });
+
+  // update supplier payable
+  const s = db.suppliers.find(x=>x.id===supId);
+  if(s){ s.bal = (s.bal||0) + tot; }
+
+  db.transactions.push({
+    id:Date.now(),
+    type:'purchase',
+    ref: purId,
+    date,
+    amt: tot
+  });
+
+  saveDB();
+  purCart=[];
+  renderPurchaseCart();
+  alert('Purchase saved');
+}
+
+/* PURCHASE REPORT PRINT */
+function printPurchaseReport(){
+  const start = document.getElementById('rpt-start').value;
+  const end = document.getElementById('rpt-end').value;
+  const trs = db.transactions.filter(t=>t.type==='purchase' && (!start || t.date>=start) && (!end || t.date<=end));
+  let html = `<div class="print-header"><h3>Purchase Report</h3><div>${start} to ${end}</div></div>`;
+  html += `<table class="print-table"><thead><tr><th>Date</th><th>Ref</th><th class="text-right">Amount</th></tr></thead><tbody>`;
+  let tot=0;
+  trs.forEach(t=>{
+    html += `<tr><td>${t.date}</td><td>${t.ref}</td><td class="text-right">${format(t.amt)}</td></tr>`;
+    tot+=t.amt||0;
+  });
+  html += `<tr><td colspan="2"><strong>Total</strong></td><td class="text-right"><strong>${format(tot)}</strong></td></tr>`;
+  html += `</tbody></table>`;
+  const zone = document.getElementById('print-zone');
+  zone.innerHTML = html;
+  window.print();
+}
+
+/* HR / EMPLOYEES / ATTENDANCE */
+function saveEmployee(){
+  const id = document.getElementById('me-id').value.trim();
+  const name = document.getElementById('me-name').value.trim();
+  const role = document.getElementById('me-role').value.trim();
+  if(!id || !name){ alert('ID and Name required'); return; }
+  const ex = db.employees.find(x=>x.id===id);
+  if(ex){ ex.name=name; ex.role=role; }
+  else db.employees.push({id, name, role});
+  saveDB();
+  closeModal('m-emp');
+}
+
+function renderEmployees(){
+  const tbody = document.getElementById('emp-body');
+  if(!tbody) return;
+  tbody.innerHTML='';
+  db.employees.forEach(e=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${e.id}</td><td>${e.name}</td><td>${e.role||''}</td><td></td>`;
+    tbody.appendChild(tr);
+  });
+
+  // attendance dropdowns and expense-employee link
+  const aSel = document.getElementById('att-emp');
+  const eSel = document.getElementById('me-emp');
+  if(aSel){
+    aSel.innerHTML='';
+    db.employees.forEach(e=>{ aSel.innerHTML += `<option value="${e.id}">${e.name}</option>`; });
+  }
+  if(eSel){
+    eSel.innerHTML='<option value="">-- none --</option>';
+    db.employees.forEach(e=>{ eSel.innerHTML += `<option value="${e.id}">${e.name}</option>`; });
+  }
+}
+
+function saveAttendance(){
+  const date = document.getElementById('att-date').value;
+  const emp = document.getElementById('att-emp').value;
+  const status = document.getElementById('att-status').value;
+  const note = document.getElementById('att-shift').value;
+  if(!emp){ alert('Employee required'); return; }
+  db.attendance.push({id:Date.now(),date,emp,status,note});
+  saveDB();
+  closeModal('m-att');
+}
+
+function renderAttendance(){
+  // Not listing on UI directly; used in printAttendanceReport
+}
+
+function printAttendanceReport(){
+  const start = document.getElementById('rpt-start').value;
+  const end = document.getElementById('rpt-end').value;
+  const rows = db.attendance.filter(a=>(!start || a.date>=start) && (!end || a.date<=end));
+  let html = `<div class="print-header"><h3>Attendance Report</h3><div>${start} to ${end}</div></div>`;
+  html += `<table class="print-table"><thead><tr><th>Date</th><th>Emp</th><th>Status</th><th>Note</th></tr></thead><tbody>`;
+  rows.forEach(r=>{
+    const e = db.employees.find(x=>x.id===r.emp);
+    html += `<tr><td>${r.date}</td><td>${e?e.name:''}</td><td>${r.status}</td><td>${r.note||''}</td></tr>`;
+  });
+  html += `</tbody></table>`;
+  const zone = document.getElementById('print-zone');
+  zone.innerHTML = html;
+  window.print();
+}
+
+/* SETTINGS / TAX / MISC PROFIT */
+function applySettingsToPos(){
+  const mode = db.info.taxMode || 'percent';
+  const taxP = db.info.taxPercent || 0;
+  const fixed = db.info.fixedTax || 0;
+  if(mode==='percent'){
+    document.getElementById('pos-tax').value = taxP;
+    document.getElementById('pos-fixed-tax').value = 0;
+  } else {
+    document.getElementById('pos-tax').value = 0;
+    document.getElementById('pos-fixed-tax').value = fixed;
+  }
+  calcPos();
+}
+
+function toggleFixedTaxSettings(){
+  const mode = document.getElementById('set-tax-mode').value;
+  document.getElementById('fixed-tax-settings').style.display = (mode==='fixed')?'block':'none';
+}
+
+function saveSettings(){
+  const name = document.getElementById('set-name').value||'Company';
+  const addr = document.getElementById('set-addr').value||'';
+  const logo = document.getElementById('set-logo').value||'';
+  const mode = document.getElementById('set-tax-mode').value;
+  const fixed = Number(document.getElementById('set-fixed-tax').value||0);
+  const taxPercent = Number(document.getElementById('set-tax-percent').value||0);
+  db.info = { name, addr, logo, taxMode:mode, fixedTax:fixed, taxPercent };
+  saveDB();
+  // update logo live
+  const el = document.getElementById('brand-logo');
+  if(el && logo) el.src = logo;
+  applySettingsToPos();
+}
+
+/* REPORTING + MISC PROFIT */
+function calcDash(){
+  const sel = document.getElementById('dash-range').value;
+  let from=null, to=null;
+  const today = new Date().toISOString().split('T')[0];
+  if(sel==='today'){ from=to=today; }
+  else if(sel==='yesterday'){
+    const d = new Date();
+    d.setDate(d.getDate()-1);
+    const y = d.toISOString().split('T')[0];
+    from=to=y;
+  } else if(sel==='7'){
+    const d = new Date();
+    d.setDate(d.getDate()-6);
+    from=d.toISOString().split('T')[0];
+    to=today;
+  } else if(sel==='30'){
+    const d = new Date();
+    d.setDate(d.getDate()-29);
+    from=d.toISOString().split('T')[0];
+    to=today;
+  } else if(sel==='all'){
+    from=null; to=null;
+  } else {
+    from=document.getElementById('dash-from').value||null;
+    to=document.getElementById('dash-to').value||null;
+  }
+
+  if(from) document.getElementById('dash-from').value=from;
+  if(to) document.getElementById('dash-to').value=to;
+
+  const rows = db.sales.filter(s=> (!from || s.date>=from) && (!to || s.date<=to));
+  let total=0,cash=0,credit=0,online=0,gross=0;
+  rows.forEach(s=>{
+    if(s.returned) return;
+    total += s.net||0;
+    gross += s.gross||0;
+    if(s.payMode==='Cash') cash+=s.net||0;
+    else if(s.payMode==='Credit') credit+=s.net||0;
+    else if(s.payMode==='Online') online+=s.net||0;
+  });
+
+  // misc profits add into gross and net
+  const miscInRange = db.miscProfits.filter(m=>(!from || m.date>=from) && (!to || m.date<=to));
+  let miscTotal=0;
+  miscInRange.forEach(m=>{ miscTotal += m.amt||0; });
+  gross += miscTotal;
+
+  // net profit = gross - expenses
+  const expRows = db.expenses.filter(e=>(!from || e.date>=from) && (!to || e.date<=to));
+  let expTotal=0;
+  expRows.forEach(e=>{ expTotal += e.amt||0; });
+  const netProfit = gross - expTotal;
+
+  document.getElementById('d-total').innerText=format(total);
+  document.getElementById('d-cash').innerText=format(cash);
+  document.getElementById('d-credit').innerText=format(credit);
+  document.getElementById('d-online').innerText=format(online);
+  document.getElementById('d-gross').innerText=format(gross);
+  document.getElementById('d-net').innerText=format(netProfit);
+
+  const tbody = document.getElementById('dash-sales-body');
+  tbody.innerHTML='';
+  rows.forEach(s=>{
+    const c = db.customers.find(x=>x.id===s.custId)||{name:'Walk-in'};
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${s.date}</td>
+      <td>${s.invoice}</td>
+      <td>${c.name}</td>
+      <td>${s.payMode}</td>
+      <td class="text-right">${format(s.net||0)}</td>
+      <td class="text-right">${format(s.gross||0)}</td>
+      <td class="text-right">${format((s.gross||0) - 0)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* GENERIC REPORT VIEW/PRINT */
+function viewReport(type){
+  const start = document.getElementById('rpt-start').value;
+  const end = document.getElementById('rpt-end').value;
+  let html = '';
+  if(type==='sale'){
+    const rows = db.sales.filter(s=>(!start || s.date>=start)&&(!end || s.date<=end));
+    html += `<div class="print-header"><h3>Sales Report</h3><div>${start} to ${end}</div></div>`;
+    html += `<table class="print-table"><thead><tr><th>Date</th><th>Inv</th><th>Cust</th><th>Mode</th><th class="text-right">Net</th><th class="text-right">Gross</th></tr></thead><tbody>`;
+    let tot=0,gr=0;
+    rows.forEach(s=>{
+      if(s.returned) return;
+      const c = db.customers.find(x=>x.id===s.custId)||{name:'Walk-in'};
+      html += `<tr><td>${s.date}</td><td>${s.invoice}</td><td>${c.name}</td><td>${s.payMode}</td><td class="text-right">${format(s.net||0)}</td><td class="text-right">${format(s.gross||0)}</td></tr>`;
+      tot+=s.net||0; gr+=s.gross||0;
+    });
+    html += `<tr><td colspan="4"><strong>Total</strong></td><td class="text-right"><strong>${format(tot)}</strong></td><td class="text-right"><strong>${format(gr)}</strong></td></tr>`;
+    html += `</tbody></table>`;
+  } else if(type==='profit'){
+    const sRows = db.sales.filter(s=>(!start || s.date>=start)&&(!end || s.date<=end) && !s.returned);
+    let sGross=0;
+    sRows.forEach(s=>{ sGross += s.gross||0; });
+    const expRows = db.expenses.filter(e=>(!start || e.date>=start)&&(!end || e.date<=end));
+    let expTot=0; expRows.forEach(e=>expTot+=e.amt||0);
+
+    const miscRows = db.miscProfits.filter(m=>(!start || m.date>=start)&&(!end || m.date<=end));
+    let miscTot=0; miscRows.forEach(m=>miscTot+=m.amt||0);
+
+    const net = sGross + miscTot - expTot;
+    html += `<div class="print-header"><h3>Profit Report</h3><div>${start} to ${end}</div></div>`;
+    html += `<table class="print-table"><tbody>
+      <tr><td>Gross Profit from Sales</td><td class="text-right">${format(sGross)}</td></tr>
+      <tr><td>Misc Profits</td><td class="text-right">${format(miscTot)}</td></tr>
+      <tr><td>Total Expenses</td><td class="text-right">${format(expTot)}</td></tr>
+      <tr><td><strong>Net Profit</strong></td><td class="text-right"><strong>${format(net)}</strong></td></tr>
+    </tbody></table>`;
+  } else if(type==='expense'){
+    const rows = db.expenses.filter(e=>(!start || e.date>=start)&&(!end || e.date<=end));
+    html += `<div class="print-header"><h3>Expense Report</h3><div>${start} to ${end}</div></div>`;
+    html += `<table class="print-table"><thead><tr><th>Date</th><th>Cat</th><th>Payee</th><th>Desc</th><th class="text-right">Amt</th></tr></thead><tbody>`;
+    let tot=0;
+    rows.forEach(e=>{
+      html += `<tr><td>${e.date}</td><td>${e.cat}</td><td>${e.payee||''}</td><td>${e.desc||''}</td><td class="text-right">${format(e.amt||0)}</td></tr>`;
+      tot+=e.amt||0;
+    });
+    html += `<tr><td colspan="4"><strong>Total</strong></td><td class="text-right"><strong>${format(tot)}</strong></td></tr>`;
+    html += `</tbody></table>`;
+  } else if(type==='stock'){
+    html += `<div class="print-header"><h3>Stock Report</h3><div>${new Date().toISOString().split('T')[0]}</div></div>`;
+    html += `<table class="print-table"><thead><tr><th>Code</th><th>Name</th><th>Loc</th><th>Unit</th><th class="text-right">Stock</th><th class="text-right">Cost</th></tr></thead><tbody>`;
+    let totVal=0;
+    db.items.forEach(it=>{
+      const val=(it.stock||0)*(it.cost||0);
+      totVal+=val;
+      html += `<tr><td>${it.code}</td><td>${it.name}</td><td>${it.loc||''}</td><td>${it.u1||'Pcs'}</td><td class="text-right">${format(it.stock||0)}</td><td class="text-right">${format(val)}</td></tr>`;
+    });
+    html += `<tr><td colspan="5"><strong>Total Stock Value</strong></td><td class="text-right"><strong>${format(totVal)}</strong></td></tr>`;
+    html += `</tbody></table>`;
+  }
+
+  const w = window.open('');
+  w.document.write(`<html><head><title>${type} report</title></head><body>${html}</body></html>`);
+  w.document.close();
+}
+
+function printReport(type){
+  // simply route to viewReport and rely on browser print
+  viewReport(type);
+}
+
+/* CUSTOMER CREDIT REPORT PRINT */
+function printCustomerCreditReport(){
+  const custId = Number(document.getElementById('led-credit-cust').value);
+  const start = document.getElementById('led-rpt-start').value;
+  const end = document.getElementById('led-rpt-end').value;
+  const c = db.customers.find(x=>x.id===custId);
+  if(!c){ alert('Select customer'); return; }
+  const sales = db.sales.filter(s=>s.custId===custId && (!start || s.date>=start)&&(!end || s.date<=end) && !s.returned);
+  const pays = db.transactions.filter(t=>t.type==='custPay' && t.ref===custId && (!start || t.date>=start)&&(!end || t.date<=end));
+  let html = `<div class="print-header"><h3>Customer Credit Report</h3><div>${c.name}</div><div>${start} to ${end}</div></div>`;
+  html += `<table class="print-table"><thead><tr><th>Date</th><th>Type</th><th>Ref</th><th class="text-right">Amount</th></tr></thead><tbody>`;
+  let bal=0;
+  sales.forEach(s=>{
+    bal += s.net||0;
+    html += `<tr><td>${s.date}</td><td>Sale</td><td>${s.invoice}</td><td class="text-right">${format(s.net||0)}</td></tr>`;
+  });
+  pays.forEach(p=>{
+    bal -= p.amt||0;
+    html += `<tr><td>${p.date}</td><td>Payment</td><td>${p.id}</td><td class="text-right">-${format(p.amt||0)}</td></tr>`;
+  });
+  html += `<tr><td colspan="3"><strong>Balance</strong></td><td class="text-right"><strong>${format(bal)}</strong></td></tr>`;
+  html += `</tbody></table>`;
+  const zone = document.getElementById('print-zone');
+  zone.innerHTML = html;
+  window.print();
+}
+
+/* SUPPLIER REPORT */
+function printSupplierReport(){
+  const supId = Number(document.getElementById('led-sup-select').value);
+  const start = document.getElementById('led-sup-start').value;
+  const end = document.getElementById('led-sup-end').value;
+  const s = db.suppliers.find(x=>x.id===supId);
+  if(!s){ alert('Select supplier'); return; }
+  const trs = db.transactions.filter(t=>t.type==='purchase' && (!start || t.date>=start)&&(!end || t.date<=end));
+  const pays = db.transactions.filter(t=>t.type==='supPay' && t.ref===supId && (!start || t.date>=start)&&(!end || t.date<=end));
+  let html = `<div class="print-header"><h3>Supplier Report</h3><div>${s.name}</div><div>${start} to ${end}</div></div>`;
+  html += `<table class="print-table"><thead><tr><th>Date</th><th>Type</th><th>Ref</th><th class="text-right">Amount</th></tr></thead><tbody>`;
+  let bal=0;
+  trs.forEach(t=>{
+    bal += t.amt||0;
+    html += `<tr><td>${t.date}</td><td>Purchase</td><td>${t.ref}</td><td class="text-right">${format(t.amt||0)}</td></tr>`;
+  });
+  pays.forEach(p=>{
+    bal -= p.amt||0;
+    html += `<tr><td>${p.date}</td><td>Payment</td><td>${p.id}</td><td class="text-right">-${format(p.amt||0)}</td></tr>`;
+  });
+  html += `<tr><td colspan="3"><strong>Balance</strong></td><td class="text-right"><strong>${format(bal)}</strong></td></tr>`;
+  html += `</tbody></table>`;
+  const zone = document.getElementById('print-zone');
+  zone.innerHTML = html;
+  window.print();
+}
+
+/* TOGGLE BANK FIELD */
+function toggleBank(modeId, rowId){
+  const mode = document.getElementById(modeId).value;
+  const row = document.getElementById(rowId);
+  row.style.display = (mode==='Online')?'block':'none';
+}
+
+/* HARD RESET */
+function hardReset(){
+  const pass = prompt('Enter 1234 to confirm FULL RESET:');
+  if(pass!=='1234'){ alert('Wrong password'); return; }
+  localStorage.removeItem(DB_KEY);
+  location.reload();
+}
+</script>
+</body>
+</html>
